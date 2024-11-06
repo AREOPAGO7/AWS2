@@ -3,7 +3,7 @@ name: Deploy to EC2
 on:
   push:
     branches:
-      - master  # or master, based on your branch name
+      - master  # Or your default branch
 
 jobs:
   deploy:
@@ -22,6 +22,11 @@ jobs:
       run: |
         npm install
         npm run build
+
+    - name: Add EC2 host to known_hosts
+      run: |
+        mkdir -p ~/.ssh
+        ssh-keyscan -H ${{ secrets.EC2_PUBLIC_IP }} >> ~/.ssh/known_hosts
 
     - name: Copy files to EC2
       run: |
