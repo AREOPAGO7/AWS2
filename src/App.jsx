@@ -24,7 +24,7 @@ function App() {
   };
 
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', marginTop: '50px' }}>
+    <div style={{ display: 'flex', justifyContent: 'center', marginTop: '50px', marginLeft:'600px' }}>
       <div style={{ textAlign: 'center', maxWidth: '400px', width: '100%' }}>
         <h1>Todo List</h1>
         <input
