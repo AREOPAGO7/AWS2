@@ -1,0 +1,38 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - master  # or master, based on your branch name
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
+
+    - name: Install dependencies and build
+      run: |
+        npm install
+        npm run build
+
+    - name: Copy files to EC2
+      run: |
+        scp -i "${{ secrets.EC2_SSH_PRIVATE_KEY }}" -r ./dist/* ubuntu@${{ secrets.EC2_PUBLIC_IP }}:/var/www/html/
+      env:
+        SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+        EC2_PUBLIC_IP: ${{ secrets.EC2_PUBLIC_IP }}
+
+    - name: Restart Nginx (Optional)
+      run: |
+        ssh -i "${{ secrets.EC2_SSH_PRIVATE_KEY }}" ubuntu@${{ secrets.EC2_PUBLIC_IP }} "sudo systemctl restart nginx"
+      env:
+        SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+        EC2_PUBLIC_IP: ${{ secrets.EC2_PUBLIC_IP }}
