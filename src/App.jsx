@@ -24,7 +24,7 @@ function App() {
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: '50px auto', textAlign: 'center' }}>
+    <div style={{ maxWidth: '400px', margin: '50px auto' , marginLeft:'50%', textAlign: 'center' }}>
       <h1>Todo List</h1>
       <input
         type="text"
