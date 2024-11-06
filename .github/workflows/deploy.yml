@@ -3,41 +3,54 @@ name: Deploy to EC2
 on:
   push:
     branches:
-      - master  # Or your default branch
+      - main
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '16'
+      - name: Build project
+        run: |
+          npm install
+          npm run build
 
-    - name: Install dependencies and build
-      run: |
-        npm install
-        npm run build
+      - name: Set up SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "-----BEGIN RSA PRIVATE KEY-----
+          MIIEpAIBAAKCAQEAsWcz295NBzj0KRzNx/LVn10W8o8RC2xClgofEnTk5sHcQ9nO
+          W/wyBJAvpebGBVgkDmii4RmRCbnR2W5pEPZWn0b7A4jmdgP1eR4bMh+tg3PKBhBd
+          pawTiIO4EAHiwSYupK5cnDmK9Qania0kMh3xnfC7LkDjGrH5ydqzufr89EL0fdDU
+          P6hDYjsCI7Mb6+lNAj5ISqA4nCi7kS0Dq+vbwY85G04rxSpLedv53o/6erQtNFJt
+          Wyiomr0BWAvB0FVOatruFz72sXf4/koOfCKQXQlB2cvYKpwObCh0dK/HEBED3K0g
+          6V9MiwTMANolajNv4+nNRasdNdh+CtncFu1VvwIDAQABAoIBAQCN30XW0OnzG7YP
+          ZuyeufHjF7QxWP69jt+VVBTTUs54SJLZZEcmwwJRKeohF/RG890p9L5FnIekKonL
+          BARcP1S43jAB/KqpuLLIIK6JIFJILQJkZRQvWPTqGMTLcGaiJuHoa1S+zzn0iFTV
+          wrSOq+m9cHaRH+0/PRPRPOi8lB9VSx185e0MERYUkFogLbf1Xh9F/nM55i78nHGl
+          265UztBl75sM1v089k3NsX+Ml+7PsMWTOliHW8S5MlYzQnplbMPllDtsoGcuGjG1
+          HYEhjexeHLy64exAhTa+gjskj9ReUMNNQPnd+PTFLCYv39sXXDbg0yjIgoPmnHyU
+          D3KHscGZAoGBANpMaCX5rcEDlDkgaun60qKxeMDViyd8a5FtDjmvHpTjbOtfaSlT
+          BhPl8U3Nx4T6xFfYGVX9EA7RShvtHzN4lGOZYFXrsPvza/RQ8Fou3O8bRdtvzn3M
+          TdzCu7ZuEE3CMZx0adLbobEARpH2GVLRmnA3ZqalMi1Ue2jXyrJi8K8zAoGBANAK
+          soyDDaaZfNvBv3GihDxJkD+NJWVvktCi9qcDJqWgrrU0VK2N0vIOoLXVhHSVU/a7
+          H7A2wA89M2Gmuefe5/ZPTB5gZUmyhwybpya5pLset3kTFjvc2Zwyx/Yjwkpq3cJ+
+          KJxVG8gMc1nVvKlG/IYGo+/3Yp4tWrQBbZErjW9FAoGAaClDHLOpI8r4Y9XDDggf
+          j3/NFX4PWvT0Qrzdp8qWdgaahyjMfepeoQn7/Nruk9Yv75ZuaGhKzDcy/GZFmAK2
+          E1ww6m5+0YmR/k7MkMuBohnKWG1eAwqEMI0+kkqsPt4lW/j0MaeY3GM8SRM7fBgF
+          b/wPX/69FYIVLK6iykGJhJ8CgYBxRDG7wKpQ9yX8e3rgwmueayrG/vDKTjmvr9n8
+          SgHjkR0teOVVbG7Z7M7g0PQBiT+iiHSTOuvMIDT2SJDUxg6ikr/NlgvvWOygF6qk
+          sdQXMH0RxSuIwhAUM62cvBFO9Onxt0AjBU9P1j+DPJQv0X8w9TKSNq0Rk33bnR9r
+          NzwUxQKBgQCnoZ52nZO9bZZ82NHXiM8YISEHmhJuyBDAv17d75SYE7VJLH+WoZ9O
+          0+VgthIhpdYrq628aN4dF6EYsJjcxCec9KX/HqsJVz3xm1xMbi2QARP+Sl7gGSCy
+          NwSxB5AneXiaJGxjgjDUuxJy7iBe+IPstbxYKCzM1C1ACl6bjCw4pg==
+          -----END RSA PRIVATE KEY-----" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H 3.129.68.236 >> ~/.ssh/known_hosts
 
-    - name: Add EC2 host to known_hosts
-      run: |
-        mkdir -p ~/.ssh
-        ssh-keyscan -H ${{ secrets.EC2_PUBLIC_IP }} >> ~/.ssh/known_hosts
-
-    - name: Copy files to EC2
-      run: |
-        scp -i "${{ secrets.EC2_SSH_PRIVATE_KEY }}" -r ./dist/* ubuntu@${{ secrets.EC2_PUBLIC_IP }}:/var/www/html/
-      env:
-        SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-        EC2_PUBLIC_IP: ${{ secrets.EC2_PUBLIC_IP }}
-
-    - name: Restart Nginx (Optional)
-      run: |
-        ssh -i "${{ secrets.EC2_SSH_PRIVATE_KEY }}" ubuntu@${{ secrets.EC2_PUBLIC_IP }} "sudo systemctl restart nginx"
-      env:
-        SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-        EC2_PUBLIC_IP: ${{ secrets.EC2_PUBLIC_IP }}
+      - name: Deploy to EC2
+        run: |
+          scp -i ~/.ssh/id_rsa -r ./dist/* ubuntu@3.129.68.236:/var/www/html/
