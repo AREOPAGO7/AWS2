@@ -1,4 +1,4 @@
-name: Deploy to EC2
+name: Deploy to EC2 and Run SonarQube Analysis
 
 on:
   push:
@@ -46,11 +46,27 @@ jobs:
           sdQXMH0RxSuIwhAUM62cvBFO9Onxt0AjBU9P1j+DPJQv0X8w9TKSNq0Rk33bnR9r
           NzwUxQKBgQCnoZ52nZO9bZZ82NHXiM8YISEHmhJuyBDAv17d75SYE7VJLH+WoZ9O
           0+VgthIhpdYrq628aN4dF6EYsJjcxCec9KX/HqsJVz3xm1xMbi2QARP+Sl7gGSCy
-          NwSxB5AneXiaJGxjgjDUuxJy7iBe+IPstbxYKCzM1C1ACl6bjCw4pg==
-          -----END RSA PRIVATE KEY-----" > ~/.ssh/id_rsa
+          NwSxB5AneXiaJGxjgjDUuxJy7iBe+IPstbxYKCzM1C1ACl6bjCw4pg=="
+          > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H 3.129.68.236 >> ~/.ssh/known_hosts
 
       - name: Deploy to EC2
         run: |
           scp -i ~/.ssh/id_rsa -r ./dist/* ubuntu@3.129.68.236:/var/www/html/
+
+      - name: Install SonarScanner
+        run: |
+          curl -sS https://downloads.sonarsource.com/sonar-scanner-cli/4.7.0.2747/sonar-scanner-4.7.0.2747-linux.zip -o sonar-scanner.zip
+          unzip sonar-scanner.zip
+          sudo mv sonar-scanner-4.7.0.2747-linux /opt/sonar-scanner
+          echo "export PATH=$PATH:/opt/sonar-scanner/bin" >> ~/.bashrc
+          source ~/.bashrc
+
+      - name: Run SonarQube analysis
+        run: |
+          /opt/sonar-scanner/bin/sonar-scanner \
+            -Dsonar.projectKey=AWS \
+            -Dsonar.sources=src \
+            -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
+            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
