@@ -33,11 +33,32 @@ jobs:
         run: |
           npm run build
 
-     # Run SonarScanner for your project
+     jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Install dependencies
+      - name: Install SonarScanner
+        run: |
+          # Install dependencies and SonarScanner
+          sudo apt-get update
+          sudo apt-get install -y openjdk-11-jdk wget unzip
+          wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.7.0.2747-linux.zip
+          unzip sonar-scanner-cli-4.7.0.2747-linux.zip
+          sudo mv sonar-scanner-4.7.0.2747-linux /opt/sonar-scanner
+          echo "export SONAR_SCANNER_HOME=/opt/sonar-scanner" >> ~/.bashrc
+          echo "export PATH=$SONAR_SCANNER_HOME/bin:$PATH" >> ~/.bashrc
+          source ~/.bashrc
+          sonar-scanner --version  # Verify SonarScanner installation
+
+      # Run SonarScanner for your project
       - name: Run SonarScanner
         run: |
-          sonar-scanner -Dsonar.projectKey=YourProjectKey -Dsonar.organization=YourOrgName -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=sqp_38561cf815db0aa6a87f6988fe290c6c23a44609
-
+          sonar-scanner -Dsonar.projectKey=YourProjectKey -Dsonar.organization=YourOrgName -Dsonar.host.url=http://localhost:9000 -Dsonar.login=sqp_38561cf815db0aa6a87f6988fe290c6c23a44609
       # Set up SSH for deployment to EC2
       - name: Set up SSH
         run: |
