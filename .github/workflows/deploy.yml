@@ -1,4 +1,4 @@
-name: Deploy to EC2 and Run SonarQube Analysis
+name: Deploy to EC2
 
 on:
   push:
@@ -10,17 +10,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout the code from the repository
       - name: Checkout code
         uses: actions/checkout@v2
 
+      # Install dependencies and build the project
       - name: Build project
         run: |
           npm install
           npm run build
 
+      # Set up SSH access with the private key
       - name: Set up SSH
         run: |
+          # Create SSH directory if not exists
           mkdir -p ~/.ssh
+          
+          # Add the private key directly into the file
           echo "-----BEGIN RSA PRIVATE KEY-----
           MIIEpAIBAAKCAQEAsWcz295NBzj0KRzNx/LVn10W8o8RC2xClgofEnTk5sHcQ9nO
           W/wyBJAvpebGBVgkDmii4RmRCbnR2W5pEPZWn0b7A4jmdgP1eR4bMh+tg3PKBhBd
@@ -46,27 +52,16 @@ jobs:
           sdQXMH0RxSuIwhAUM62cvBFO9Onxt0AjBU9P1j+DPJQv0X8w9TKSNq0Rk33bnR9r
           NzwUxQKBgQCnoZ52nZO9bZZ82NHXiM8YISEHmhJuyBDAv17d75SYE7VJLH+WoZ9O
           0+VgthIhpdYrq628aN4dF6EYsJjcxCec9KX/HqsJVz3xm1xMbi2QARP+Sl7gGSCy
-          NwSxB5AneXiaJGxjgjDUuxJy7iBe+IPstbxYKCzM1C1ACl6bjCw4pg=="
-          > ~/.ssh/id_rsa
+          NwSxB5AneXiaJGxjgjDUuxJy7iBe+IPstbxYKCzM1C1ACl6bjCw4pg==
+          -----END RSA PRIVATE KEY-----" > ~/.ssh/id_rsa
+          
+          # Set permissions for the private key
           chmod 600 ~/.ssh/id_rsa
+          
+          # Add EC2 instance to known hosts
           ssh-keyscan -H 3.129.68.236 >> ~/.ssh/known_hosts
 
+      # Deploy the build to the EC2 instance using SCP
       - name: Deploy to EC2
         run: |
           scp -i ~/.ssh/id_rsa -r ./dist/* ubuntu@3.129.68.236:/var/www/html/
-
-      - name: Install SonarScanner
-        run: |
-          curl -sS https://downloads.sonarsource.com/sonar-scanner-cli/4.7.0.2747/sonar-scanner-4.7.0.2747-linux.zip -o sonar-scanner.zip
-          unzip sonar-scanner.zip
-          sudo mv sonar-scanner-4.7.0.2747-linux /opt/sonar-scanner
-          echo "export PATH=$PATH:/opt/sonar-scanner/bin" >> ~/.bashrc
-          source ~/.bashrc
-
-      - name: Run SonarQube analysis
-        run: |
-          /opt/sonar-scanner/bin/sonar-scanner \
-            -Dsonar.projectKey=AWS \
-            -Dsonar.sources=src \
-            -Dsonar.host.url=http://localhost:9000 \
-            -Dsonar.login=sqp_38561cf815db0aa6a87f6988fe290c6c23a44609
