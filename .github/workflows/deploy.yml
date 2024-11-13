@@ -33,18 +33,10 @@ jobs:
         run: |
           npm run build
 
-      # Run SonarQube scan
-      - name: Run SonarQube scan
+     # Run SonarScanner for your project
+      - name: Run SonarScanner
         run: |
-          # Install SonarScanner (if not already installed)
-          wget -qO - https://sonarcloud.io/install-sonar-scanner.sh | bash
-          
-          # Configure the SonarScanner
-          echo "sonar.host.url=http://localhost:9000" > sonar-project.properties
-          echo "sonar.login=sqp_38561cf815db0aa6a87f6988fe290c6c23a44609" >> sonar-project.properties
-
-          # Run the SonarScanner analysis
-          ./sonar-scanner/bin/sonar-scanner
+          sonar-scanner -Dsonar.projectKey=YourProjectKey -Dsonar.organization=YourOrgName -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=sqp_38561cf815db0aa6a87f6988fe290c6c23a44609
 
       # Set up SSH for deployment to EC2
       - name: Set up SSH
