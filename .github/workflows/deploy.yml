@@ -18,8 +18,11 @@ jobs:
       - name: Set up Java
         uses: actions/setup-java@v2
         with:
-          java-version: '17'  # Use the appropriate Java version
-          distribution: 'adoptopenjdk'
+          java-version: '17'
+          distribution: 'adoptium'  # Change from 'adoptopenjdk' to 'adoptium'
+          java-package: 'jdk'
+          architecture: 'x64'
+          check-latest: false
 
       # Install dependencies for the project
       - name: Install dependencies
