@@ -68,5 +68,5 @@ jobs:
           /opt/sonar-scanner/bin/sonar-scanner \
             -Dsonar.projectKey=AWS \
             -Dsonar.sources=src \
-            -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }} \
-            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+            -Dsonar.host.url=http://localhost:9000 \
+            -Dsonar.login=sqp_38561cf815db0aa6a87f6988fe290c6c23a44609
