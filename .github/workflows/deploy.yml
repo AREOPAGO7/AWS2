@@ -1,4 +1,4 @@
-name: Deploy to EC2
+name: Deploy to EC2 and Run SonarQube Analysis
 
 on:
   push:
@@ -10,23 +10,44 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout the code from the repository
+      # Checkout code
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # Install dependencies and build the project
-      - name: Build project
+      # Set up Java for SonarQube scan
+      - name: Set up Java
+        uses: actions/setup-java@v2
+        with:
+          java-version: '17'  # Use the appropriate Java version
+          distribution: 'adoptopenjdk'
+
+      # Install dependencies for the project
+      - name: Install dependencies
         run: |
           npm install
+
+      # Build the project
+      - name: Build project
+        run: |
           npm run build
 
-      # Set up SSH access with the private key
+      # Run SonarQube scan
+      - name: Run SonarQube scan
+        run: |
+          # Install SonarScanner (if not already installed)
+          wget -qO - https://sonarcloud.io/install-sonar-scanner.sh | bash
+          
+          # Configure the SonarScanner
+          echo "sonar.host.url=http://localhost:9000" > sonar-project.properties
+          echo "sonar.login=sqp_38561cf815db0aa6a87f6988fe290c6c23a44609" >> sonar-project.properties
+
+          # Run the SonarScanner analysis
+          ./sonar-scanner/bin/sonar-scanner
+
+      # Set up SSH for deployment to EC2
       - name: Set up SSH
         run: |
-          # Create SSH directory if not exists
           mkdir -p ~/.ssh
-          
-          # Add the private key directly into the file
           echo "-----BEGIN RSA PRIVATE KEY-----
           MIIEpAIBAAKCAQEAsWcz295NBzj0KRzNx/LVn10W8o8RC2xClgofEnTk5sHcQ9nO
           W/wyBJAvpebGBVgkDmii4RmRCbnR2W5pEPZWn0b7A4jmdgP1eR4bMh+tg3PKBhBd
@@ -54,14 +75,10 @@ jobs:
           0+VgthIhpdYrq628aN4dF6EYsJjcxCec9KX/HqsJVz3xm1xMbi2QARP+Sl7gGSCy
           NwSxB5AneXiaJGxjgjDUuxJy7iBe+IPstbxYKCzM1C1ACl6bjCw4pg==
           -----END RSA PRIVATE KEY-----" > ~/.ssh/id_rsa
-          
-          # Set permissions for the private key
           chmod 600 ~/.ssh/id_rsa
-          
-          # Add EC2 instance to known hosts
           ssh-keyscan -H 3.129.68.236 >> ~/.ssh/known_hosts
 
-      # Deploy the build to the EC2 instance using SCP
+      # Deploy to EC2
       - name: Deploy to EC2
         run: |
           scp -i ~/.ssh/id_rsa -r ./dist/* ubuntu@3.129.68.236:/var/www/html/
