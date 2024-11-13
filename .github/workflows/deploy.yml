@@ -19,11 +19,10 @@ jobs:
         uses: actions/setup-java@v2
         with:
           java-version: '17'
-          distribution: 'adoptium'  # Change from 'adoptopenjdk' to 'adoptium'
+          distribution: 'zulu'  # or 'adoptopenjdk' (if preferred)
           java-package: 'jdk'
           architecture: 'x64'
           check-latest: false
-
       # Install dependencies for the project
       - name: Install dependencies
         run: |
